@@ -15,6 +15,7 @@ final Guid picoDataCharUuid = Guid("0000aaa3-0000-1000-8000-00805f9b34fb");
 final Guid picoSen66CharUuid = Guid(
   "0000aaa4-0000-1000-8000-00805f9b34fb",
 ); // Unified SEN66
+final Guid picoBatteryCharUuid = Guid("0000aaa5-0000-1000-8000-00805f9b34fb");
 // -----------------------------------------
 
 class BleScannerCubit extends Cubit<BleScannerState> {
@@ -26,10 +27,12 @@ class BleScannerCubit extends Cubit<BleScannerState> {
   BluetoothCharacteristic? _commandCharacteristic;
   BluetoothCharacteristic? _dataCharacteristic;
   BluetoothCharacteristic? _liveSen66Characteristic;
+  BluetoothCharacteristic? _batteryCharacteristic;
 
   // --- DATA STREAMING ---
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<List<int>>? _liveSen66Subscription;
+  StreamSubscription<List<int>>? _batterySubscription;
 
   final List<int> _dataBuffer = [];
   final List<String> _tempLogBuffer = [];
@@ -157,7 +160,11 @@ class BleScannerCubit extends Cubit<BleScannerState> {
 
       List<BluetoothService> services = await device.discoverServices();
 
-      BluetoothCharacteristic? foundTime, foundCmd, foundData, foundSen66;
+      BluetoothCharacteristic? foundTime,
+          foundCmd,
+          foundData,
+          foundSen66,
+          foundBattery;
 
       for (var service in services) {
         if (service.uuid == picoServiceUuid) {
@@ -170,6 +177,8 @@ class BleScannerCubit extends Cubit<BleScannerState> {
               foundData = char;
             } else if (char.uuid == picoSen66CharUuid) {
               foundSen66 = char;
+            } else if (char.uuid == picoBatteryCharUuid) {
+              foundBattery = char;
             }
           }
         }
@@ -178,15 +187,18 @@ class BleScannerCubit extends Cubit<BleScannerState> {
       if (foundTime != null &&
           foundCmd != null &&
           foundData != null &&
-          foundSen66 != null) {
+          foundSen66 != null &&
+          foundBattery != null) {
         _internalDeviceRef = device;
 
         _timeCharacteristic = foundTime;
         _commandCharacteristic = foundCmd;
         _dataCharacteristic = foundData;
         _liveSen66Characteristic = foundSen66;
+        _batteryCharacteristic = foundBattery;
 
         _startLiveSen66Subscription();
+        _startBatterySubscription();
 
         emit(
           state.copyWith(
@@ -250,6 +262,22 @@ class BleScannerCubit extends Cubit<BleScannerState> {
       onError: (e) =>
           emit(state.copyWith(statusMessage: "SEN66 Stream Error: $e")),
     );
+  }
+
+  // --- BATTERY DATA ---
+  void _startBatterySubscription() async {
+    if (_batteryCharacteristic == null) return;
+    await _batterySubscription?.cancel();
+    await _batteryCharacteristic!.setNotifyValue(true);
+
+    _batterySubscription = _batteryCharacteristic!.onValueReceived.listen((
+      chunk,
+    ) {
+      // Payload: 1 byte (uint8)
+      if (chunk.isNotEmpty) {
+        emit(state.copyWith(batteryLevel: chunk[0]));
+      }
+    }, onError: (e) => print("Battery Stream Error: $e"));
   }
 
   // --- TIME SYNC ---
@@ -356,6 +384,7 @@ class BleScannerCubit extends Cubit<BleScannerState> {
   Future<void> disconnect() async {
     _cleanupDataStream();
     await _liveSen66Subscription?.cancel();
+    await _batterySubscription?.cancel();
     await _internalDeviceRef?.disconnect();
 
     _internalDeviceRef = null;
@@ -363,6 +392,7 @@ class BleScannerCubit extends Cubit<BleScannerState> {
     _liveSen66Characteristic = null;
     _commandCharacteristic = null;
     _dataCharacteristic = null;
+    _batteryCharacteristic = null;
 
     emit(
       state.copyWith(
@@ -380,6 +410,7 @@ class BleScannerCubit extends Cubit<BleScannerState> {
         voc: 0,
         nox: 0,
         co2: 0,
+        batteryLevel: null,
       ),
     );
   }

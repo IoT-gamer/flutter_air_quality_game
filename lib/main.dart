@@ -73,6 +73,33 @@ class _BleScannerScreenState extends State<BleScannerScreen> {
       appBar: AppBar(
         title: const Text('Pico SEN66 Air Quality'),
         actions: [
+          if (state.connectedDevice != null && state.batteryLevel != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      state.batteryLevel! > 20
+                          ? Icons.battery_full
+                          : Icons.battery_alert,
+                      color: state.batteryLevel! > 20
+                          ? Colors.greenAccent
+                          : Colors.redAccent,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${state.batteryLevel}%',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.menu_book),
             tooltip: 'Pollutant Guide',

@@ -30,6 +30,9 @@ class BleScannerState extends Equatable {
   final int? nox;
   final int? co2;
 
+  // Pico battery level
+  final int? batteryLevel;
+
   const BleScannerState({
     this.status = BleScannerStatus.initial,
     this.scanResults = const [],
@@ -46,6 +49,7 @@ class BleScannerState extends Equatable {
     this.voc,
     this.nox,
     this.co2,
+    this.batteryLevel,
   });
 
   BleScannerState copyWith({
@@ -64,6 +68,7 @@ class BleScannerState extends Equatable {
     int? voc,
     int? nox,
     int? co2,
+    int? batteryLevel,
   }) {
     return BleScannerState(
       status: status ?? this.status,
@@ -83,6 +88,7 @@ class BleScannerState extends Equatable {
       voc: voc ?? this.voc,
       nox: nox ?? this.nox,
       co2: co2 ?? this.co2,
+      batteryLevel: batteryLevel ?? this.batteryLevel,
     );
   }
 
@@ -103,5 +109,6 @@ class BleScannerState extends Equatable {
     voc,
     nox,
     co2,
+    batteryLevel,
   ];
 }

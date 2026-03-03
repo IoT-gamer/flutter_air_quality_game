@@ -11,6 +11,7 @@ But it's not just an environmental dashboard—it's an interactive survival game
 
 * **Live Environmental Dashboard:** Monitors 9 distinct data points in real-time, including PM1.0, PM2.5, PM4.0, PM10.0, VOC, NOx, CO2, Temperature, and Humidity.
 * **Game:** A dynamic "Tap Defense" game powered by Flame. Pollutant sprites spawn based on your live sensor readings. If the air in your room gets worse, the game gets harder!
+**Live Power Monitoring:** Reads the custom `0xAAA5` BLE characteristic to display the remote datalogger's real-time battery percentage directly in the app bar.
 * **Historical Data Logging:** Requests daily `.txt` log files directly from the Pico using BLE commands (e.g., `GET:YYYY-MM-DD.txt`).
 * **Interactive Charts:** Parses raw log data and plots particulate matter, gases, and environmental trends using `fl_chart`.
 * **RTC Time Synchronization:** Automatically pushes the mobile device's current date and time to the Pico's Real-Time Clock upon connection to ensure accurate logging.
